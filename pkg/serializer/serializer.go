@@ -12,7 +12,7 @@ type Redirect struct{}
 func (r *Redirect) Decode(input []byte) (*model.Redirect, error) {
 	redirect := &model.Redirect{}
 	if err := json.Unmarshal(input, redirect); err != nil {
-		return nil, errors.New("unable to Unmarshall")
+		return nil, errors.New("unable to Unmarshal")
 	}
 	return redirect, nil
 }

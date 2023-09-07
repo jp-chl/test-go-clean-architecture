@@ -1,7 +1,7 @@
 package redirect
 
 import (
-	"errors"
+	// "errors"
 	"time"
 
 	"github.com/jp-chl/test-go-clean-architecture/domain/model"
@@ -9,10 +9,10 @@ import (
 	"github.com/jp-chl/test-go-clean-architecture/domain/service"
 )
 
-var (
-	ErrRedirectNotFound = errors.New("redirect Not Found")
-	ErrRedirectInvalid  = errors.New("redirect Invalid")
-)
+// var (
+// 	ErrRedirectNotFound = errors.New("redirect Not Found")
+// 	ErrRedirectInvalid  = errors.New("redirect Invalid")
+// )
 
 type redirectService struct {
 	redirectRepository repository.RedirectRepository
