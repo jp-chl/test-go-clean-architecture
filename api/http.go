@@ -4,6 +4,7 @@ import (
 	// "io/ioutil"
 	// "log"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -53,4 +54,33 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirect.URL, http.StatusMovedPermanently)
 }
 
-func (h *handler) Post(w http.ResponseWriter, r *http.Request) {}
+func (h *handler) Post(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	requestBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	redirect, err := h.serializer(contentType).Decode(requestBody)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	err = h.redirectService.Store(redirect)
+	if err != nil {
+		// TODO
+		if errors.Cause(err) == errors.New("redirect Invalid") {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	responseBody, err := h.serializer(contentType).Encode(redirect)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	setupResponse(w, contentType, responseBody, http.StatusCreated)
+}
