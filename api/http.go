@@ -55,7 +55,9 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) Post(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("======= YYY ========")
 	contentType := r.Header.Get("Content-Type")
+	fmt.Println("======= YYY ========")
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
