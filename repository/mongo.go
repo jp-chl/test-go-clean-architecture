@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jp-chl/test-go-clean-architecture/domain/model"
@@ -30,10 +31,12 @@ func newMongoClient(mongoURL string, mongoTimeout int) (*mongo.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Connected...")
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Ping ok...")
 	return client, nil
 }
 
@@ -79,6 +82,7 @@ func (r *mongoRepository) Store(redirect *model.Redirect) error {
 		},
 	)
 	if err != nil {
+		fmt.Printf("error while trying to store [%s]", err.Error())
 		return errors.New("error while trying to store")
 	}
 	return nil

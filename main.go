@@ -9,9 +9,6 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-
 	"github.com/jp-chl/test-go-clean-architecture/api"
 	dr "github.com/jp-chl/test-go-clean-architecture/domain/repository"
 	mr "github.com/jp-chl/test-go-clean-architecture/repository"
@@ -23,30 +20,34 @@ func main() {
 	service := uc.NewRedirectService(repo)
 	handler := api.NewHandler(service)
 
-	router := chi.NewRouter()
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.Get(w, r)
+		case http.MethodPost:
+			handler.Post(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
-	fmt.Println("======= XXX ========")
-
-	router.Get("/{code}", handler.Get)
-	router.Post("/", handler.Post)
-	fmt.Println("======= XXX ========")
+	port := httpPort()
+	server := &http.Server{
+		Addr: ":" + port,
+	}
 
 	_errors := make(chan error, 2)
-	fmt.Println("======= XXX ========")
+
 	go func() {
-		port := httpPort()
-		fmt.Println("======= XXX ========")
-		fmt.Println("Listenening on port ", port)
-		http.ListenAndServe(port, router)
+		err := server.ListenAndServe()
+		fmt.Println("Listening on port ", port)
+		if err != nil {
+			_errors <- err
+		}
 	}()
 
 	go func() {
 		c := make(chan os.Signal, 1)
-		fmt.Println("======= XXX ========")
 		signal.Notify(c, syscall.SIGINT)
 		_errors <- fmt.Errorf("%s", <-c)
 	}()
@@ -59,7 +60,7 @@ func httpPort() string {
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
-	return fmt.Sprintf(":%s", port)
+	return port
 }
 
 func getDB() dr.RedirectRepository {
