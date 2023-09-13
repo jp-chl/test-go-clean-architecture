@@ -28,10 +28,11 @@ func newMongoClient(mongoURL string, mongoTimeout int) (*mongo.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mongoTimeout)*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURL))
+	// client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURL))
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Connected...")
+	fmt.Println("Connected to DB...")
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		return nil, err
@@ -72,18 +73,29 @@ func (r *mongoRepository) Find(code string) (*model.Redirect, error) {
 func (r *mongoRepository) Store(redirect *model.Redirect) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
-	collection := r.client.Database(r.database).Collection("redirects")
-	_, err := collection.InsertOne(
+
+	collection := r.client.Database(r.database).Collection("temp")
+	result, err := collection.InsertOne(
 		ctx,
-		bson.M{
-			"code":       redirect.Code,
-			"url":        redirect.URL,
-			"created_at": redirect.CreatedAt,
-		},
+		redirect,
 	)
+
+	// collection := r.client.Database(r.database).Collection("redirects")
+	// result, err := collection.InsertOne(
+	// 	ctx,
+	// 	bson.M{
+	// 		"code":       redirect.Code,
+	// 		"url":        redirect.URL,
+	// 		"created_at": redirect.CreatedAt,
+	// 	},
+	// )
+
 	if err != nil {
 		fmt.Printf("error while trying to store [%s]", err.Error())
 		return errors.New("error while trying to store")
 	}
+
+	fmt.Printf("Inserted with Id: [%v]\n", result.InsertedID)
+
 	return nil
 }
